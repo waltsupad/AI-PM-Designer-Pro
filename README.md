@@ -1,11 +1,96 @@
-<div align="center">
+# AI Product Marketing Designer v1.0
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+AI Product Marketing Designer 是一個基於 Google Gemini API 的現代化網頁應用程式，旨在幫助行銷人員與產品經理快速生成專業級的視覺行銷素材。
 
-  <h1>Built with AI Studio</h2>
+只需上傳一張產品照片，AI 就能扮演「視覺總監」的角色，為您分析產品特點，構思三種不同的行銷策略路線，並生成高品質的廣告海報概念圖。
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## 🌟 核心功能 (v1.0)
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+1.  **AI 產品分析 (Product Analysis)**:
+    *   使用 Gemini 2.5 Flash 模型深度識別產品特徵。
+    *   自動提煉繁體中文的產品賣點與視覺描述。
 
-</div>
+2.  **多樣化行銷策略 (Strategy Generation)**:
+    *   自動生成 3 種截然不同的視覺行銷路線 (Routes)。
+    *   每條路線包含獨特的主標題 (Slogan)、副標題與風格簡述。
+
+3.  **專業視覺生成 (Visual Generation)**:
+    *   整合 Google Gemini 3 Pro Image Generation 模型。
+    *   **[v1.0 新增] 中文畫面摘要**：在生成前預覽畫面的構成說明。
+    *   **[v1.0 新增] 提示詞編輯 (Prompt Editing)**：可自由修改 AI 生成的英文提示詞。
+    *   **[v1.0 新增] 參考圖片上傳 (Reference Image)**：可上傳參考圖 (如配色參考、Logo) 來引導生成結果。
+
+4.  **報告匯出**:
+    *   一鍵下載完整的文字策略報告 (.txt) 與生成的高畫質圖片。
+
+## 🛠 技術棧
+
+*   **Frontend**: React 19, TypeScript, Tailwind CSS
+*   **AI Model**: Google GenAI SDK (@google/genai)
+    *   Gemini 2.5 Flash (Vision & Reasoning)
+    *   Gemini 3 Pro Image Preview (Image Generation)
+
+---
+
+## 🚀 部署指南 (Deployment Guide)
+
+本專案設計為純前端應用 (SPA)，非常適合部署在 GitHub Pages, Vercel 或 **Cloudflare Pages**。以下提供使用 GitHub + Cloudflare Pages 的免費部署教學。
+
+### 步驟 1: 準備工作
+
+1.  擁有一個 [GitHub](https://github.com/) 帳號。
+2.  擁有一個 [Cloudflare](https://www.cloudflare.com/) 帳號。
+3.  在本地端安裝 Node.js 與 Git (如果您是在雲端 IDE 開發，這些通常已預裝)。
+
+### 步驟 2: 上傳程式碼至 GitHub
+
+1.  登入 GitHub，點擊右上角 "+" -> "New repository"。
+2.  輸入 Repository name (例如 `ai-pm-designer`)，選擇 "Public" 或 "Private"，然後點擊 "Create repository"。
+3.  回到您的專案終端機 (Terminal)，執行以下指令：
+
+```bash
+# 1. 初始化 Git (如果尚未初始化)
+git init
+
+# 2. 加入所有檔案
+git add .
+
+# 3. 提交變更
+git commit -m "Initial commit v1.0"
+
+# 4. 設定主要分支名稱 (通常為 main)
+git branch -M main
+
+# 5. 連結遠端倉庫 (將 URL 替換為您剛剛建立的 GitHub 網址)
+git remote add origin https://github.com/YOUR_USERNAME/ai-pm-designer.git
+
+# 6. 推送程式碼
+git push -u origin main
+```
+
+### 步驟 3: 使用 Cloudflare Pages 部署
+
+1.  登入 Cloudflare Dashboard，在左側選單選擇 **Workers & Pages**。
+2.  點擊 **Create Application** -> 切換到 **Pages** 標籤 -> 點擊 **Connect to Git**。
+3.  授權 Cloudflare 存取您的 GitHub 帳號，並選擇剛剛建立的 `ai-pm-designer` 倉庫。
+4.  **設定 Build settings (關鍵步驟)**:
+    *   **Framework preset**: 選擇 `Create React App` (或根據您的建置工具選擇 Vite 等，如果是本專案結構，通常無需特別設定 Build command，因為它是純靜態或即時編譯，若使用標準 React build 流程：)
+    *   **Build command**: `npm run build` (若您有設定 package.json build script)
+    *   **Build output directory**: `build` 或 `dist`
+    *   *注意：如果是使用類似 StackBlitz/IDX 的即時環境且沒有 package.json build script，您可能需要先在本地建立 `package.json` 並設定 build 流程。*
+
+    **(簡易版 - 如果您沒有複雜的 Build 流程)**:
+    *   您可以直接將 `index.html`, `index.tsx` 以及所有 `src/` 下的檔案結構上傳。但最推薦的方式還是透過標準的 React Build 流程 (Vite/Webpack) 產出靜態檔後再部署。
+
+5.  點擊 **Save and Deploy**。
+
+### 💡 關於 API Key 的安全性
+
+本專案是純前端應用，API Key 目前設計為由使用者在使用時於瀏覽器端輸入 (透過 `window.aistudio.openSelectKey` 或環境變數)。
+*   **部署後**：使用者造訪網頁時，會彈出 Google AI Studio 的授權視窗，要求使用者使用自己的 API Key，這是最安全的做法，您不需要將您的 Key 寫死在程式碼中。
+
+---
+
+## © License
+
+此專案僅供學習與展示用途。
