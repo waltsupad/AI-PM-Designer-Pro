@@ -1,9 +1,19 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { DIRECTOR_SYSTEM_PROMPT, CONTENT_PLANNER_SYSTEM_PROMPT } from "../prompts";
 import { DirectorOutput, ContentPlan, MarketingRoute, ProductAnalysis, ContentItem } from "../types";
 
 // --- Helpers ---
+
+const getApiKey = (): string => {
+  // First try localStorage (for deployed app)
+  const storedKey = localStorage.getItem('gemini_api_key');
+  if (storedKey) return storedKey;
+
+  // Fallback to process.env (for local dev if set)
+  if (process.env.API_KEY) return process.env.API_KEY;
+
+  throw new Error("找不到 API 金鑰。請在設定中輸入您的 Gemini API Key。");
+};
 
 const cleanJson = (text: string): string => {
   let clean = text.trim();
@@ -44,11 +54,9 @@ export const analyzeProductImage = async (
     productName: string, 
     brandContext: string
 ): Promise<DirectorOutput> => {
-  if (!process.env.API_KEY) {
-    throw new Error("找不到 API 金鑰。請選擇一個金鑰。");
-  }
-
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = getApiKey();
+  const ai = new GoogleGenAI({ apiKey });
+  
   const imagePart = await fileToGenerativePart(file);
 
   const promptText = `
@@ -87,9 +95,8 @@ export const generateContentPlan = async (
     analysis: ProductAnalysis,
     referenceCopy: string
 ): Promise<ContentPlan> => {
-    if (!process.env.API_KEY) throw new Error("No API Key");
-
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = getApiKey();
+    const ai = new GoogleGenAI({ apiKey });
 
     const promptText = `
       選定策略路線: ${route.route_name}
@@ -128,11 +135,8 @@ export const generateMarketingImage = async (
     referenceImageBase64?: string,
     aspectRatio: '1:1' | '9:16' | '3:4' | '4:3' | '16:9' = '3:4'
 ): Promise<string> => {
-  if (!process.env.API_KEY) {
-    throw new Error("找不到 API 金鑰。");
-  }
-
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = getApiKey();
+  const ai = new GoogleGenAI({ apiKey });
 
   const parts: any[] = [{ text: prompt }];
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { analyzeProductImage, generateContentPlan, generateFullReport } from './services/geminiService';
 import { DirectorOutput, AppState, ContentPlan, ContentItem } from './types';
@@ -6,6 +5,7 @@ import { Spinner } from './components/Spinner';
 import { ProductCard } from './components/ProductCard';
 import { PromptCard } from './components/PromptCard';
 import { GuideModal } from './components/GuideModal';
+import { ApiKeyModal } from './components/ApiKeyModal';
 import { ContentSuite } from './components/ContentSuite';
 
 const App: React.FC = () => {
@@ -28,45 +28,24 @@ const App: React.FC = () => {
 
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [isGuideOpen, setIsGuideOpen] = useState(false);
-
-  // --- API Key Handling ---
   
-  // Check API Key on Mount
+  // API Key State
+  const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
+  const [hasKey, setHasKey] = useState(false);
+
+  // Check for API Key on mount
   useEffect(() => {
-    const checkInitialKey = async () => {
-      const aiStudio = (window as any).aistudio;
-      if (aiStudio) {
-        try {
-          const hasKey = await aiStudio.hasSelectedApiKey();
-          if (!hasKey) {
-            // Automatically prompt new users to select their key
-            await aiStudio.openSelectKey();
-          }
-        } catch (err) {
-          console.error("Error checking API key status:", err);
-        }
-      }
-    };
-    checkInitialKey();
+    const key = localStorage.getItem('gemini_api_key');
+    if (!key) {
+      setIsKeyModalOpen(true);
+    } else {
+      setHasKey(true);
+    }
   }, []);
 
-  // Used before critical actions to ensure a key exists
-  const ensureApiKey = async () => {
-    const aiStudio = (window as any).aistudio;
-    if (aiStudio) {
-      const hasKey = await aiStudio.hasSelectedApiKey();
-      if (!hasKey) {
-        await aiStudio.openSelectKey();
-      }
-    }
-  };
-
-  // Used for the "API Settings" button to force open the dialog
-  const openApiSettings = async () => {
-    const aiStudio = (window as any).aistudio;
-    if (aiStudio) {
-      await aiStudio.openSelectKey();
-    }
+  const handleKeySave = (key: string) => {
+    setIsKeyModalOpen(false);
+    setHasKey(true);
   };
 
   // --- Handlers ---
@@ -87,10 +66,15 @@ const App: React.FC = () => {
 
   const handleAnalyze = async () => {
     if (!selectedFile) return;
+    
+    if (!hasKey) {
+        setIsKeyModalOpen(true);
+        return;
+    }
+
     setErrorMsg("");
     setAppState(AppState.ANALYZING);
     try {
-      await ensureApiKey();
       const result = await analyzeProductImage(selectedFile, productName, brandContext);
       setAnalysisResult(result);
       setAppState(AppState.RESULTS);
@@ -98,6 +82,11 @@ const App: React.FC = () => {
       console.error(e);
       setErrorMsg(e.message || "分析過程中發生了意外錯誤。");
       setAppState(AppState.ERROR);
+      
+      // If auth error, re-open modal
+      if (e.message.includes("API Key")) {
+        setIsKeyModalOpen(true);
+      }
     }
   };
 
@@ -321,6 +310,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#0f0f12] text-slate-200 selection:bg-purple-500 selection:text-white font-sans flex flex-col">
       <GuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
+      <ApiKeyModal isOpen={isKeyModalOpen} onSave={handleKeySave} />
 
       {/* Header */}
       <header className="w-full py-6 border-b border-white/5 bg-[#0f0f12]/90 backdrop-blur-md sticky top-0 z-50">
@@ -335,7 +325,9 @@ const App: React.FC = () => {
             </div>
             <div className="flex gap-4">
                 <button onClick={() => setIsGuideOpen(true)} className="text-gray-400 hover:text-white text-sm font-medium transition-colors">功能導覽 v2.0</button>
-                <button onClick={openApiSettings} className="text-purple-400 hover:text-purple-300 text-sm font-bold">API 設定</button>
+                <button onClick={() => setIsKeyModalOpen(true)} className="text-purple-400 hover:text-purple-300 text-sm font-bold">
+                    {hasKey ? '更換 API Key' : '設定 API Key'}
+                </button>
             </div>
         </div>
       </header>
