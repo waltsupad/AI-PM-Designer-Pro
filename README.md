@@ -4,6 +4,14 @@
 
 基於 Google 最新一代的 **Gemini 2.5 Flash** (推理與視覺) 與 **Gemini 3 Pro Image** (圖像生成) 模型，它能扮演您的「AI 創意總監」與「社群內容規劃師」，從單張產品圖出發，自動拆解品牌 DNA，並生成包含廣告主圖與社群 Stories 的完整銷售漏斗素材包。
 
+## 🌐 立即體驗 (Try it Now)
+
+點擊下方連結即可直接在 Google AI Studio 環境中執行此 App：
+
+👉 [**開啟 AI Product Marketing Designer PRO**](https://ai.studio/apps/drive/1oEWzVCETaFvXoV3QJsHfCHWVn_cuaneS)
+
+---
+
 ## 🚀 PRO v2.0 核心功能
 
 ### 1. 深度感知輸入 (Context-Aware Input)
@@ -31,18 +39,62 @@ v2.0 引入了專業的廣告製作流程：
 
 ---
 
-## 🌐 立即體驗 (Try it Now)
+## ⚠️ GitHub Pages 部署指南 (重要)
 
-點擊下方連結即可直接在 Google AI Studio 環境中執行此 App：
+如果您將程式碼上傳至 GitHub Pages 後發現頁面空白，是因為瀏覽器無法直接執行 `.tsx` 原始碼。您需要透過 GitHub Actions 自動打包應用程式。
 
-👉 [**開啟 AI Product Marketing Designer PRO**](https://ai.studio/apps/drive/1oEWzVCETaFvXoV3QJsHfCHWVn_cuaneS)
+### 步驟 1: 設定 GitHub Actions
+1. 在您的 GitHub 儲存庫中，建立資料夾路徑：`.github/workflows/`
+2. 在該資料夾內建立一個檔案 `deploy.yml`。
+3. 複製以下內容貼上：
 
-### ⚠️ 重要設定說明 (Setup Guide)
-當您開啟連結後，系統會自動將專案複製到您的工作區。為了正常使用所有生成功能，請注意以下事項：
+```yaml
+name: Deploy to GitHub Pages
 
-1. **API Key 設定**：啟動 App 時，系統會要求您選擇 API Key。
-2. **付費帳戶需求**：由於本專案使用了 Google 最新且高階的 **Gemini 3 Pro Image** 等模型，您所選用的 API Key 必須來自一個 **已綁定計費帳戶 (Google Cloud Billing Enabled)** 的專案。
-    *   若使用免費層級 (Free Tier) 的 Key，可能會遇到無法調用特定模型或額度受限的問題。
+on:
+  push:
+    branches: [ main ] # 或是 master，請確認您的主分支名稱
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install
+      - name: Build
+        run: npm run build
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+### 步驟 2: 開啟權限
+1. 進入 GitHub 儲存庫的 **Settings** > **Pages**。
+2. 在 **Build and deployment** > **Source** 選項中，選擇 **GitHub Actions** (不要選 Deploy from a branch)。
+3. 推送程式碼更新，等待 Actions 跑完 (約 1-2 分鐘)，您的網站就會正常顯示了！
 
 ---
 
@@ -52,29 +104,7 @@ v2.0 引入了專業的廣告製作流程：
 *   **AI Models**:
     *   **Gemini 2.5 Flash**: 負責多模態視覺分析、品牌語意理解、行銷策略規劃 (Thinking Budget Enabled)。
     *   **Gemini 3 Pro Image Preview**: 負責執行高解析度的廣告圖像生成 (支援 1:1 與 9:16 構圖)。
-*   **State Management**: React Hooks
-*   **Build Tool**: Create React App / Vite
-
----
-
-## 🚀 部署指南 (Deployment)
-
-本專案為純前端架構 (SPA)，無需後端伺服器，推薦部署於 **Cloudflare Pages**, **Vercel** 或 **GitHub Pages**。
-
-### 快速部署 (Cloudflare Pages)
-
-1.  Fork 或上傳本專案至您的 GitHub。
-2.  登入 Cloudflare Dashboard > **Workers & Pages** > **Create Application** > **Connect to Git**。
-3.  選擇本專案 Repository。
-4.  **Build Settings**:
-    *   Framework preset: `Create React App`
-    *   Build command: `npm run build`
-    *   Output directory: `build`
-5.  點擊 **Deploy** 即可完成。
-
-### 🔑 API Key 設定
-本應用程式採用 **BYOK (Bring Your Own Key)** 模式。
-使用者在瀏覽器端開啟應用時，會透過 Google AI Studio 的 `window.aistudio.openSelectKey()` 安全地請求授權，金鑰不會儲存在伺服器端，確保安全性。
+*   **Build Tool**: Vite
 
 ---
 
@@ -85,7 +115,3 @@ v2.0 引入了專業的廣告製作流程：
 Open sourced by [FlyPig AI](https://flypigai.icareu.tw/)
 
 Copyright (c) 2025 AI Product Marketing Designer PRO
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
