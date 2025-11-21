@@ -84,7 +84,7 @@ const App: React.FC = () => {
       setAppState(AppState.ERROR);
       
       // If auth error, re-open modal
-      if (e.message.includes("API Key")) {
+      if (typeof e.message === 'string' && (e.message.includes("API Key") || e.message.includes("Permission"))) {
         setIsKeyModalOpen(true);
       }
     }
@@ -335,9 +335,18 @@ const App: React.FC = () => {
       <main className="container mx-auto px-4 py-8 flex-1 flex flex-col">
         {/* Global Error */}
         {errorMsg && (
-            <div className="w-full max-w-2xl mx-auto mb-8 p-4 bg-red-900/20 border border-red-500/50 rounded-lg text-red-200 text-center flex items-center justify-between">
-                <span>{errorMsg}</span>
-                <button onClick={() => setAppState(AppState.IDLE)} className="text-sm underline hover:text-white">重置</button>
+            <div className="w-full max-w-5xl mx-auto mb-8 p-6 bg-red-900/20 border border-red-500/50 rounded-xl text-left shadow-lg overflow-hidden">
+                 <div className="flex items-center justify-between mb-4 border-b border-red-500/30 pb-2">
+                    <h3 className="text-red-400 font-bold flex items-center gap-2 text-lg">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        Google API Error (Raw Debug Info)
+                    </h3>
+                    <button onClick={() => setAppState(AppState.IDLE)} className="text-sm text-red-300 hover:text-white underline">重置並返回首頁</button>
+                 </div>
+                 {/* Show raw error text with better formatting for JSON and Scrolling */}
+                 <pre className="font-mono text-xs text-red-200/90 bg-black/60 p-4 rounded overflow-auto whitespace-pre-wrap break-words max-h-[400px]">
+                    {errorMsg}
+                 </pre>
             </div>
         )}
 
