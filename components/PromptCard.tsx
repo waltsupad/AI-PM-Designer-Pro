@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { generateMarketingImage, fileToBase64 } from '../services/geminiService';
 import { Spinner } from './Spinner';
 import { PromptData } from '../types';
+import { ImageModal } from './ImageModal';
 
 interface PromptCardProps {
   data: PromptData;
@@ -20,6 +21,12 @@ export const PromptCard: React.FC<PromptCardProps> = ({ data, index }) => {
   // Reference Image State
   const [refImage, setRefImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Aspect Ratio State for Phase 1
+  const [aspectRatio, setAspectRatio] = useState<'3:4' | '4:3'>('3:4');
+  
+  // Image Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Reset state when data prop changes (new route selected)
   useEffect(() => {
@@ -28,14 +35,15 @@ export const PromptCard: React.FC<PromptCardProps> = ({ data, index }) => {
     setRefImage(null);
     setError(null);
     setIsEditing(false);
+    setAspectRatio('3:4'); // Reset to default
   }, [data]);
 
   const handleGenerate = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Pass the current (potentially edited) prompt and the optional reference image
-      const imageUrl = await generateMarketingImage(promptText, refImage || undefined);
+      // Pass the current (potentially edited) prompt, reference image, and selected aspect ratio
+      const imageUrl = await generateMarketingImage(promptText, refImage || undefined, aspectRatio);
       setGeneratedImage(imageUrl);
     } catch (err: any) {
       setError(err.message || "圖片生成失敗");
@@ -64,18 +72,28 @@ export const PromptCard: React.FC<PromptCardProps> = ({ data, index }) => {
   return (
     <div className="bg-[#15151a] rounded-xl border border-white/5 overflow-hidden flex flex-col h-full group hover:border-purple-500/30 transition-colors duration-300 shadow-lg">
       {/* Result Area */}
-      <div className="aspect-[3/4] bg-black relative flex items-center justify-center overflow-hidden border-b border-white/5">
+      <div className={`bg-black relative flex items-center justify-center overflow-hidden border-b border-white/5 ${aspectRatio === '3:4' ? 'aspect-[3/4]' : 'aspect-[4/3]'}`}>
         {generatedImage ? (
             <div className="relative w-full h-full group/img">
                 <img src={generatedImage} alt="Generated Result" className="w-full h-full object-cover animate-in fade-in duration-700" />
-                <a 
-                    href={generatedImage} 
-                    download={`poster-variant-${index + 1}.png`}
-                    className="absolute top-2 right-2 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition opacity-0 group-hover/img:opacity-100"
-                    title="下載"
-                >
-                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                </a>
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="p-2 bg-white/20 hover:bg-white/40 rounded-full text-white backdrop-blur-sm"
+                        title="放大檢視"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
+                    </button>
+                    <a 
+                        href={generatedImage} 
+                        download={`poster-variant-${index + 1}.png`}
+                        className="p-2 bg-white/20 hover:bg-white/40 rounded-full text-white backdrop-blur-sm"
+                        title="下載"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    </a>
+                </div>
             </div>
         ) : (
           <div className="text-center p-6 w-full h-full flex flex-col items-center justify-center">
@@ -140,6 +158,33 @@ export const PromptCard: React.FC<PromptCardProps> = ({ data, index }) => {
              )}
         </div>
 
+        {/* Aspect Ratio Selection */}
+        <div className="bg-[#1e1e24] rounded-lg p-3 border border-white/5">
+            <label className="block text-xs text-gray-400 mb-2">圖片比例</label>
+            <div className="flex gap-2">
+                <button
+                    onClick={() => setAspectRatio('3:4')}
+                    className={`flex-1 py-2 px-3 rounded text-xs font-bold transition-colors ${
+                        aspectRatio === '3:4' 
+                            ? 'bg-purple-600 text-white' 
+                            : 'bg-black/30 text-gray-400 hover:bg-black/50'
+                    }`}
+                >
+                    3:4 (直式)
+                </button>
+                <button
+                    onClick={() => setAspectRatio('4:3')}
+                    className={`flex-1 py-2 px-3 rounded text-xs font-bold transition-colors ${
+                        aspectRatio === '4:3' 
+                            ? 'bg-purple-600 text-white' 
+                            : 'bg-black/30 text-gray-400 hover:bg-black/50'
+                    }`}
+                >
+                    4:3 (橫式)
+                </button>
+            </div>
+        </div>
+
         {/* Editable Prompt Section (New) */}
         <div>
             <button 
@@ -188,6 +233,14 @@ export const PromptCard: React.FC<PromptCardProps> = ({ data, index }) => {
             </button>
         </div>
       </div>
+
+      {/* Image Modal */}
+      <ImageModal
+        isOpen={isModalOpen}
+        imageUrl={generatedImage}
+        onClose={() => setIsModalOpen(false)}
+        title={`概念圖 ${index + 1}`}
+      />
     </div>
   );
 };

@@ -20,7 +20,7 @@ export const DIRECTOR_SYSTEM_PROMPT = `
 
 **第二階段：策略路線規劃 (Marketing Route Planning)**
 *   為產品構思出 **三條** 截然不同的行銷視覺路線。
-*   每條路線都需包含：路線名稱(英)、主標題(繁中)、副標題(繁中)、視覺風格(繁中)。
+*   每條路線都需包含：路線名稱(繁中)、主標題(繁中)、副標題(繁中)、視覺風格(繁中)。
 
 **第三階段：圖像生成提示詞設計**
 *   針對每個策略路線，產生 **3 個** 完整的英文繪圖提示詞 (Gemini 3 Pro Image 格式)。
@@ -37,7 +37,7 @@ export const DIRECTOR_SYSTEM_PROMPT = `
   },
   "marketing_routes": [
     {
-      "route_name": "Route Name",
+      "route_name": "路線名稱（繁體中文，例如：極簡風格、科技感、自然風）",
       "headline_zh": "Slogan",
       "subhead_zh": "Subhead",
       "style_brief_zh": "Style description",

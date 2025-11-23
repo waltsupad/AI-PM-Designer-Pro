@@ -287,19 +287,11 @@ const App: React.FC = () => {
 
         {/* Phase 2 Results */}
         {(appState === AppState.SUITE_READY || contentPlan) && contentPlan && (
-            <div className="mt-12 relative">
-                 <div className="absolute -top-6 right-0">
-                    <button 
-                        onClick={handleDownloadReport}
-                        className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm text-gray-300 hover:text-white transition-all"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                        下載全案策略報告 (.txt)
-                    </button>
-                </div>
+            <div className="mt-12">
                 <ContentSuite 
                     plan={contentPlan} 
                     onPlanUpdate={(newItems) => setEditedPlanItems(newItems)}
+                    onDownloadReport={handleDownloadReport}
                 />
             </div>
         )}
@@ -324,7 +316,7 @@ const App: React.FC = () => {
                 </h1>
             </div>
             <div className="flex gap-4">
-                <button onClick={() => setIsGuideOpen(true)} className="text-gray-400 hover:text-white text-sm font-medium transition-colors">功能導覽 v2.0</button>
+                <button onClick={() => setIsGuideOpen(true)} className="text-gray-400 hover:text-white text-sm font-medium transition-colors">功能導覽 v2.8</button>
                 <button onClick={() => setIsKeyModalOpen(true)} className="text-purple-400 hover:text-purple-300 text-sm font-bold">
                     {hasKey ? '更換 API Key' : '設定 API Key'}
                 </button>
@@ -370,7 +362,7 @@ const App: React.FC = () => {
         {appState === AppState.IDLE && (
             <div className="flex-1 flex flex-col items-center mt-8 text-center">
                 <div className="inline-block px-3 py-1 rounded-full bg-purple-900/30 border border-purple-500/30 text-purple-300 text-xs font-bold uppercase tracking-widest mb-6">
-                    New Version 2.0
+                    New Version 2.8
                 </div>
                 <h2 className="text-4xl md:text-6xl font-bold text-white serif mb-4 leading-tight">
                     打造完整的<br/>品牌視覺資產

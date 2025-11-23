@@ -28,7 +28,7 @@ export interface DirectorOutput {
 export interface ContentItem {
   id: string;
   type: 'main_white' | 'main_lifestyle' | 'story_slide';
-  ratio: '1:1' | '9:16';
+  ratio: '1:1' | '9:16' | '16:9';
   title_zh: string;
   copy_zh: string; // 文案內容
   visual_prompt_en: string;
