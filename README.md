@@ -6,9 +6,9 @@
 
 ## 🌐 立即體驗 (Try it Now)
 
-點擊下方連結即可直接在 Google AI Studio 環境中執行此 App：
+免部署，點擊下方連結填入您自己的，已正確開啟付費及授權的 Gemini API Key，即可立即體驗 https://designer.icareu.tw/
 
-👉 [**開啟 AI Product Marketing Designer PRO**](https://ai.studio/apps/drive/1oEWzVCETaFvXoV3QJsHfCHWVn_cuaneS)
+若希望自行部署，請參考下方 GitHub/Cloudflare Pages的部署指南！
 
 ---
 
