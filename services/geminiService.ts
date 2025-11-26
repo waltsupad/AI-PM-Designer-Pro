@@ -205,16 +205,25 @@ export const analyzeProductImage = async (
     try {
       const cleaned = cleanJson(response.text);
       const parsed = JSON.parse(cleaned);
+      
+      // 記錄原始回應以便除錯
+      console.log('AI 回應原始資料：', JSON.stringify(parsed, null, 2));
+      
       // 使用 Zod 驗證回應格式
       return validateDirectorOutput(parsed);
     } catch (e) {
-      console.error("Failed to parse JSON", response.text);
+      console.error("Failed to parse or validate JSON", response.text);
+      console.error("Error details:", e);
+      
       if (e instanceof AppError) {
         throw e;
       }
+      
+      // 提供更詳細的錯誤訊息（開發用）
+      const errorMessage = e instanceof Error ? e.message : String(e);
       throw new AppError({
         type: ErrorType.VALIDATION,
-        message: "AI 總監返回了無效的格式",
+        message: `AI 總監返回了無效的格式: ${errorMessage}`,
         userMessage: "AI 回應格式不正確，請再試一次。如問題持續發生，請聯繫技術支援。",
         originalError: e,
       });

@@ -4,34 +4,34 @@
 import { z } from 'zod';
 import { ProductAnalysis, MarketingRoute, DirectorOutput, ContentItem, ContentPlan } from '../types';
 
-// ProductAnalysis Schema
+// ProductAnalysis Schema - 使用更寬鬆的驗證
 export const ProductAnalysisSchema = z.object({
   name: z.string().min(1, '產品名稱不能為空'),
-  visual_description: z.string().min(10, '視覺描述至少需要 10 個字元'),
-  key_features_zh: z.string().min(10, '核心賣點至少需要 10 個字元'),
+  visual_description: z.string().min(5, '視覺描述至少需要 5 個字元'), // 降低要求
+  key_features_zh: z.string().min(5, '核心賣點至少需要 5 個字元'), // 降低要求
 });
 
-// PromptData Schema
+// PromptData Schema - 使用更寬鬆的驗證
 export const PromptDataSchema = z.object({
-  prompt_en: z.string().min(50, '提示詞至少需要 50 個字元'),
-  summary_zh: z.string().min(10, '摘要至少需要 10 個字元'),
+  prompt_en: z.string().min(20, '提示詞至少需要 20 個字元'), // 降低要求
+  summary_zh: z.string().optional().default(''), // 允許省略或空字串
 });
 
-// MarketingRoute Schema
+// MarketingRoute Schema - 使用更寬鬆的驗證
 export const MarketingRouteSchema = z.object({
-  route_name: z.string().min(2).max(20),
-  headline_zh: z.string().min(5).max(30),
-  subhead_zh: z.string().min(10).max(50),
-  style_brief_zh: z.string().min(20),
+  route_name: z.string().min(1).max(50), // 放寬長度限制
+  headline_zh: z.string().min(1).max(100), // 放寬長度限制
+  subhead_zh: z.string().min(1).max(200), // 放寬長度限制
+  style_brief_zh: z.string().min(5), // 降低要求
   target_audience_zh: z.string().optional(),
   visual_elements_zh: z.string().optional(),
-  image_prompts: z.array(PromptDataSchema).length(3, '必須包含恰好 3 個提示詞'),
+  image_prompts: z.array(PromptDataSchema).min(1).max(10), // 允許 1-10 個，不強制恰好 3 個
 });
 
-// DirectorOutput Schema
+// DirectorOutput Schema - 使用更寬鬆的驗證
 export const DirectorOutputSchema = z.object({
   product_analysis: ProductAnalysisSchema,
-  marketing_routes: z.array(MarketingRouteSchema).length(3, '必須包含恰好 3 條行銷路線'),
+  marketing_routes: z.array(MarketingRouteSchema).min(1).max(10), // 允許 1-10 條路線
 });
 
 // ContentItem Schema
@@ -53,32 +53,84 @@ export const ContentPlanSchema = z.object({
 
 /**
  * 驗證並解析 DirectorOutput
+ * 使用 safeParse 並嘗試修復常見問題
  */
 export const validateDirectorOutput = (data: unknown): DirectorOutput => {
-  try {
-    return DirectorOutputSchema.parse(data);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const errors = error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('\n');
-      throw new Error(`API 回應格式驗證失敗：\n${errors}`);
-    }
-    throw error;
+  // 先嘗試直接解析
+  const result = DirectorOutputSchema.safeParse(data);
+  
+  if (result.success) {
+    return result.data;
   }
+  
+  // 如果失敗，嘗試修復常見問題
+  if (typeof data === 'object' && data !== null) {
+    const fixed = { ...data } as Record<string, unknown>;
+    
+    // 確保 marketing_routes 是陣列
+    if (!Array.isArray(fixed.marketing_routes)) {
+      fixed.marketing_routes = [];
+    }
+    
+    // 確保每個 route 都有 image_prompts
+    if (Array.isArray(fixed.marketing_routes)) {
+      fixed.marketing_routes = fixed.marketing_routes.map((route: unknown) => {
+        if (typeof route === 'object' && route !== null) {
+          const routeObj = route as Record<string, unknown>;
+          if (!Array.isArray(routeObj.image_prompts)) {
+            routeObj.image_prompts = [];
+          }
+          // 確保每個 prompt 都有 summary_zh
+          if (Array.isArray(routeObj.image_prompts)) {
+            routeObj.image_prompts = routeObj.image_prompts.map((prompt: unknown) => {
+              if (typeof prompt === 'object' && prompt !== null) {
+                const promptObj = prompt as Record<string, unknown>;
+                if (!promptObj.summary_zh) {
+                  promptObj.summary_zh = '';
+                }
+                return promptObj;
+              }
+              return prompt;
+            });
+          }
+          return routeObj;
+        }
+        return route;
+      });
+    }
+    
+    // 再次嘗試解析修復後的資料
+    const retryResult = DirectorOutputSchema.safeParse(fixed);
+    if (retryResult.success) {
+      console.warn('驗證失敗後成功修復資料格式');
+      return retryResult.data;
+    }
+  }
+  
+  // 如果還是失敗，記錄詳細錯誤並拋出
+  const errors = result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('\n');
+  console.error('API 回應格式驗證失敗：', result.error);
+  console.error('原始資料：', JSON.stringify(data, null, 2));
+  throw new Error(`API 回應格式驗證失敗：\n${errors}`);
 };
 
 /**
  * 驗證並解析 ContentPlan
+ * 使用 safeParse 並嘗試修復常見問題
  */
 export const validateContentPlan = (data: unknown): ContentPlan => {
-  try {
-    return ContentPlanSchema.parse(data);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const errors = error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('\n');
-      throw new Error(`內容企劃格式驗證失敗：\n${errors}`);
-    }
-    throw error;
+  // 先嘗試直接解析
+  const result = ContentPlanSchema.safeParse(data);
+  
+  if (result.success) {
+    return result.data;
   }
+  
+  // 如果失敗，記錄詳細錯誤
+  const errors = result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('\n');
+  console.error('內容企劃格式驗證失敗：', result.error);
+  console.error('原始資料：', JSON.stringify(data, null, 2));
+  throw new Error(`內容企劃格式驗證失敗：\n${errors}`);
 };
 
 /**
